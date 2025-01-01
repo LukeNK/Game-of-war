@@ -1,0 +1,115 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game of War</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+
+            --color-bg: #2e3440;
+            --color-fg: #e5e9f0;
+            --color-green: #a3be8c;
+            --color-yellow: #ebcb8b;
+            --color-red: #bf616a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--color-bg);
+            color: var(--color-fg);
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid var(--color-fg);
+            width: 50px;
+            height: 50px;
+            text-align: center;
+        }
+
+        td[side='-1'] {
+            background-color: var(--color-red);
+        }
+
+        td[side='1'] {
+            background-color: var(--color-green);
+        }
+    </style>
+</head>
+<body>
+    <span id="prod-1"></span>
+    <table id="map"></table>
+    <span id="prod1"></span>
+    <button onclick="loadUrl('tick'); loadMap()">Tick</button>
+</body>
+<script>
+    let side = 0, id = 0,
+        map = document.getElementById('map');
+
+    async function loadUrl(url, body) {
+        return await fetch('/' + url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                side,
+                id,
+                ...body
+            })
+        }).then(response => response.text());
+    }
+
+    function loadMap() {
+        fetch('/map')
+            .then(response => response.json())
+            .then(data => {
+                map.innerHTML = '';
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    row.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.setAttribute('side', cell.side);
+                        td.textContent = cell.env;
+
+                        td.addEventListener('click', () => placeBlock(td.cellIndex, tr.rowIndex));
+
+                        tr.appendChild(td);
+                    });
+                    map.appendChild(tr);
+                });
+            });
+        fetch('/tick')
+            .then(response => response.json())
+            .then(data => {
+                if (side != data.turn) {
+                    setTimeout(loadMap, 1000);
+                }
+                document.getElementById('prod-1').textContent = 'Player -1: ' + data.playerProduction['-1'];
+                document.getElementById('prod1').textContent = 'Player 1: ' + data.playerProduction['1'];
+            });
+    }
+
+    async function placeBlock(x, y) {
+        await loadUrl('place', { x, y });
+        loadMap();
+    }
+
+    (async () => {
+        let player = await fetch('/player').then(response => response.json());
+        if (player[0] == '-1') side = -1;
+        else if (player[1] == '1') side = 1;
+        else return alert('You are a spectator')
+
+        id = await loadUrl('player');
+        alert('You are player ' + side);
+    })();
+</script>
+</html>
