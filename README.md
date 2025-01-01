@@ -13,3 +13,6 @@ An empty cell will automatically claim without production point if:
 A player can manually claim an empty cell next to their existing cell by spending production point. A player cannot manually claim a cell with difficulty 0.
 
 A player wins if they have production point larger than twice the area of the grid.
+
+## How to use
+Start `index.js`. The first two connections will be the two players, while other connections will be the spectators.
