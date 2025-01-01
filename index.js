@@ -2,7 +2,7 @@ let express = require('express'),
     { random, floor } = Math,
     map = [],
     turn = 1, // 1 for player 1, -1 for player 2
-    playerProduction = { '-1': 0, '1': 0 },
+    playerProduction = {},
     playerID = {}; // unique ID to give when a player claim permission
 
 function uniqueID(side) {
@@ -19,14 +19,18 @@ function lookUpID(id) {
 }
 
 // create map
-for (let i = 0; i < 10; i++) {
-    map.push([]);
-    let row = map[i];
-    for (let j = 0; j < 10; j++) {
-        row.push({});
-        let cell = row[j];
-        cell.env = floor(random() * 8);
-        cell.side = Math.round(random() * 2 - 1);
+function startGame() {
+    map = [];
+    playerProduction = { '-1': 0, '1': 0 };
+    for (let i = 0; i < 10; i++) {
+        map.push([]);
+        let row = map[i];
+        for (let j = 0; j < 10; j++) {
+            row.push({});
+            let cell = row[j];
+            cell.env = floor(random() * 8);
+            cell.side = Math.round(random() * 2 - 1);
+        }
     }
 }
 
@@ -58,12 +62,12 @@ function tick() {
 
             if (
                 neighbors['-1'] > neighbors['1']
-                && neighbors['-1'] > env
+                && neighbors['-1'] >= env
             )
                 cell.nextSide = -1;
             else if (
                 neighbors['-1'] < neighbors['1']
-                && neighbors['1'] > env
+                && neighbors['1'] >= env
             )
                 cell.nextSide = 1;
             else if (
@@ -81,6 +85,8 @@ function tick() {
             cell.side = cell.nextSide;
         }
 }
+
+startGame()
 
 // simple express html server
 let app = express();
@@ -129,12 +135,8 @@ app.post('/place', (req, res) => {
         || map[y][x].env == 0
         || playerProduction[side] < map[y][x].env
         || getNeighbor(x, y)[side] == 0
-    ) {
-        console.log(map[y][x].side)
-        console.log(map[y][x].env)
-        console.log(getNeighbor(x, y)[side])
+    )
         returnError(res);
-    }
     else {
         map[y][x].side = side;
         playerProduction[side] -= map[y][x].env;
@@ -156,6 +158,16 @@ app.post('/tick', (req, res) => {
     else {
         tick();
         turn = -turn;
+        res.send('OK');
+    }
+})
+
+app.post('/reset', (req, res) => {
+    let side = lookUpID(req.body.id);
+    if (!side || side == 0 || side != turn)
+        returnError(res);
+    else {
+        startGame();
         res.send('OK');
     }
 })

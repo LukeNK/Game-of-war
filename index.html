@@ -53,6 +53,7 @@
             background-color: var(--color-blue);
             color: var(--color-bg);
             font-size: xx-large;
+            cursor: pointer;
         }
 
         button:disabled {
@@ -61,6 +62,7 @@
     </style>
 </head>
 <body>
+    <button onclick="loadUrl('reset'); loadMap()">Reset game</button>
     <p>Player -1: <span id="prod-1"></span>/<span id="count-1"></span></p>
     <table id="map"></table>
     <p>Player 1: <span id="prod1"></span>/<span id="count1"></span></p>
