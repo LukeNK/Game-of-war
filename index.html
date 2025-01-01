@@ -9,10 +9,12 @@
             box-sizing: border-box;
 
             --color-bg: #2e3440;
+            --color-bg-light: #3b4252;
             --color-fg: #e5e9f0;
             --color-green: #a3be8c;
             --color-yellow: #ebcb8b;
             --color-red: #bf616a;
+            --color-blue: #81a1c1;
         }
 
         body {
@@ -28,10 +30,11 @@
         }
 
         td {
-            border: 1px solid var(--color-fg);
+            border: 5px solid var(--color-bg);
             width: 50px;
             height: 50px;
             text-align: center;
+            cursor: pointer;
         }
 
         td[side='-1'] {
@@ -41,13 +44,27 @@
         td[side='1'] {
             background-color: var(--color-green);
         }
+
+        button {
+            width: 100%;
+            padding: 3rem;
+            outline: none;
+            border: none;
+            background-color: var(--color-blue);
+            color: var(--color-bg);
+            font-size: xx-large;
+        }
+
+        button:disabled {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <p>Player -1: <span id="prod-1"></span>/<span id="count-1"></span></p>
     <table id="map"></table>
     <p>Player 1: <span id="prod1"></span>/<span id="count1"></span></p>
-    <button onclick="loadUrl('tick'); loadMap()">Tick</button>
+    <button id="btn" disabled onclick="loadUrl('tick'); loadMap()">Tick</button>
 </body>
 <script>
     let side = 0, id = 0,
@@ -90,8 +107,10 @@
             .then(response => response.json())
             .then(data => {
                 if (side != data.turn) {
+                    document.getElementById('btn').disabled = true;
                     setTimeout(loadMap, 1000);
-                }
+                } else
+                    document.getElementById('btn').disabled = false;
                 document.getElementById('prod-1').textContent = data.playerProduction['-1'];
                 document.getElementById('prod1').textContent = data.playerProduction['1'];
 
