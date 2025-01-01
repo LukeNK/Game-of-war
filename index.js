@@ -30,21 +30,20 @@ for (let i = 0; i < 10; i++) {
     }
 }
 
-function getNeighbor(row, col) {
+function getNeighbor(x, y) {
     let neighbors = { '-1': 0, '0': 0, '1': 0 };
-    row = parseInt(row);
-    col = parseInt(col);
+    x = parseInt(x);
+    y = parseInt(y);
 
     for (let i = -1; i <= 1; i++)
         for (let j = -1; j <= 1; j++) {
             if (
-                map[row + i] === undefined
-                || map[row + i][col + j] === undefined
+                map[y + i] === undefined
+                || map[y + i][x + j] === undefined
             ) continue;
-            let neighbor = map[row + i][col + j];
-            if (neighbor) {
+            let neighbor = map[y + i][x + j];
+            if (neighbor)
                 neighbors[neighbor.side]++;
-            }
         }
 
     return neighbors;
@@ -54,7 +53,7 @@ function tick() {
     for (let row in map)
         for (let col in map[row]) {
             let cell = map[row][col],
-                neighbors = getNeighbor(row, col);
+                neighbors = getNeighbor(col, row);
             let env = cell.env;
 
             if (
@@ -72,6 +71,8 @@ function tick() {
                 || neighbors['1'] < env
             )
                 cell.nextSide = 0;
+            else
+                cell.nextSide = cell.side;
         }
 
     for (let row of map)
@@ -79,9 +80,6 @@ function tick() {
             playerProduction[cell.side]++;
             cell.side = cell.nextSide;
         }
-
-    playerProduction['-1']++;
-    playerProduction['1']++;
 }
 
 // simple express html server
@@ -128,10 +126,15 @@ app.post('/place', (req, res) => {
         !side
         || side != turn
         || map[y][x].side != 0
+        || map[y][x].env == 0
         || playerProduction[side] < map[y][x].env
-        // || getNeighbor(y, x)[side] > 0z
-    )
+        || getNeighbor(x, y)[side] == 0
+    ) {
+        console.log(map[y][x].side)
+        console.log(map[y][x].env)
+        console.log(getNeighbor(x, y)[side])
         returnError(res);
+    }
     else {
         map[y][x].side = side;
         playerProduction[side] -= map[y][x].env;
